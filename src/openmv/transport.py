@@ -227,13 +227,6 @@ class Transport:
                 start_time = time.time()
                 continue    # Continue collecting fragments
 
-            # Either last fragment or non-fragmented packet
-            if fragments:
-                # This is the last fragment - combine all
-                fragments.extend(packet['payload'])
-                packet['payload'] = bytes(fragments)
-                packet['length'] = len(fragments)
-
             # Handle NAK flags
             if packet['flags'] & Flags.NAK:
                 # Raise specific exception for all NAK statuses except BUSY
@@ -247,6 +240,13 @@ class Transport:
                 elif status != Status.BUSY:
                     raise OMVException(f"Command failed with status: {Status(status).name}")
                 return False
+
+            # Either last fragment or non-fragmented packet
+            if fragments:
+                # This is the last fragment - combine all
+                fragments.extend(packet['payload'])
+                packet['payload'] = bytes(fragments)
+                packet['length'] = len(fragments)
 
             # Return payload or True for ACK
             return True if not packet['length'] else bytes(packet['payload'])
